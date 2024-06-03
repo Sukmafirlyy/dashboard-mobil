@@ -5,7 +5,7 @@ import GaugeComponent from 'react-gauge-component';
 import io from 'socket.io-client';
 
 const MAX_DATA_COUNT = 20;
-const MAX_SPEED = 100;
+const MAX_SPEED = 120;
 const gaugeLimits = [
   { limit: 20, color: '#5BE12C', showTick: true },
   { limit: 40, color: '#F5CD19', showTick: true },
@@ -24,6 +24,7 @@ function Home() {
   const kmhToMs = (value) => {
     return { value: value.toFixed(2), unit: 'km/h' };
   };
+
   useEffect(() => {
     const URL = "http://localhost:5001";
     const socket = io(URL, {
@@ -55,13 +56,13 @@ function Home() {
         const newData = [...prevData, { date: newTimestamp, speed: value }].slice(-MAX_DATA_COUNT);
 
         if (prevTimestamp !== null) {
-          const timeDiff = (newTimestamp - prevTimestamp) / 3600; // perbedaan waktu dalam jam
+          const timeDiff = (newTimestamp - prevTimestamp) / 3600000; // perbedaan waktu dalam jam (menggunakan 3600000 ms/jam)
           const incrementalDistance = value * timeDiff; // jarak dalam kilometer
           setTotalDistance(prevDistance => {
             const updatedDistance = prevDistance + incrementalDistance;
             return parseFloat(updatedDistance.toFixed(2)); // memastikan dua angka di belakang koma
           });
-                  
+
           const updatedDistanceData = newData.map((point, index) => ({
             ...point,
             distance: (index === 0 ? 0 : (totalDistance + incrementalDistance)).toFixed(2),
@@ -127,7 +128,7 @@ function Home() {
       <div className='charts-wrapper'>
         <div className='line-chart'>
           <ResponsiveContainer width="100%" height="100%">
-            <h3>Grafik kecepatan terhadap jarak</h3>
+            <h3>Speed-Distance Chart</h3>
             <LineChart
               width={500}
               height={300}
@@ -135,12 +136,15 @@ function Home() {
               margin={{
                 top: 5,
                 right: 30,
-                left: -30,
-                bottom: 5,
+                left: 0,
+                bottom: 9,
               }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="distance" label={{ value: "Speed (km)", position: 'insideBottomRight', offset: 0 }} />
-              <YAxis label={{ value: "Kecepatan (m/s)", angle: -90, position: 'insideLeft' }} />
+              <XAxis dataKey="distance" label={{ value: "Distance (km)", position: 'insideBottomRight', offset: 0 }} />
+              <YAxis label={{ value: "speed (km/h)", angle: -90, position: 'insideLeft' }}
+              domain={[0, 120]} // Set Y-axis range from 0 to 350
+              ticks={[0, 20, 40, 60, 80, 100, 120]} // Set Y-axis ticks with a gap of 50
+              />
               <Tooltip />
               <Legend />
               <Line type="monotone" dataKey="speed" stroke="#8884d8" activeDot={{ r: 8 }} />
